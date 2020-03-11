@@ -15,3 +15,51 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score,confusion_matrix,f1_score
 
 df=pd.read_csv('spam_or_not_spam.csv')
+df=df.dropna()
+# split data as label and text . System should be capable of predicting the label based on the  text
+df_x = df['email']
+#df_x=np.nan(df['email'])
+df_y = df['label']
+# split the table - 80 percent for training and 20 percent for test size
+x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, train_size=0.8, test_size=0.2, random_state=4)
+# feature extraction, coversion to lower case and removal of stop words using TFIDF VECTORIZER
+tfvec = TfidfVectorizer(min_df=1, stop_words='english', lowercase=True)
+x_trainFeat = tfvec.fit_transform(x_train)
+x_testFeat = tfvec.transform(x_test)
+
+
+
+# SVM is used to model
+y_trainSvm = y_train.astype('int')
+classifierModel = LinearSVC()
+classifierModel.fit(x_trainFeat, y_trainSvm)
+predResult = classifierModel.predict(x_testFeat)
+
+# GNB is used to model
+y_trainGnb = y_train.astype('int')
+classifierModel2 = MultinomialNB()
+classifierModel2.fit(x_trainFeat, y_trainGnb)
+predResult2 = classifierModel2.predict(x_testFeat)
+
+# Calc accuracy,converting to int - solves - cant handle mix of unknown and binary
+y_test = y_test.astype('int')
+actual_Y = y_test.as_matrix()
+
+print("~~~~~~~~~~SVM RESULTS~~~~~~~~~~")
+#Accuracy score using SVM
+print("Accuracy Score using SVM: {0:.4f}".format(accuracy_score(actual_Y, predResult)*100))
+#FScore MACRO using SVM
+print("F Score using SVM: {0: .4f}".format(f1_score(actual_Y, predResult, average='macro')*100))
+cmSVM=confusion_matrix(actual_Y, predResult)
+#"[True negative  False Positive\nFalse Negative True Positive]"
+print("Confusion matrix using SVM:")
+print(cmSVM)
+print("~~~~~~~~~~MNB RESULTS~~~~~~~~~~")
+#Accuracy score using MNB
+print("Accuracy Score using MNB: {0:.4f}".format(accuracy_score(actual_Y, predResult2)*100))
+#FScore MACRO using MNB
+print("F Score using MNB:{0: .4f}".format(f1_score(actual_Y, predResult2, average='macro')*100))
+cmMNb=confusion_matrix(actual_Y, predResult2)
+#"[True negative  False Positive\nFalse Negative True Positive]"
+print("Confusion matrix using MNB:")
+print(cmMNb)
